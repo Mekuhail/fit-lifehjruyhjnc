@@ -1,4 +1,16 @@
 document.addEventListener('DOMContentLoaded', function () {
+  // 1. قراءة الثيم من الرابط (URL Parameters)
+  var urlParams = new URLSearchParams(window.location.search);
+  var currentTheme = urlParams.get('theme');
+
+  // 2. تطبيق الثيم وتحديث الروابط بناءً على الرابط الحالي
+  if (currentTheme === 'dark') {
+    document.body.setAttribute('data-theme', 'dark');
+    updateNavLinks('dark');
+  } else {
+    updateNavLinks('light');
+  }
+
   setActiveNavigation();
 
   if (document.getElementById('caloriesPage')) {
@@ -18,6 +30,21 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
+// دالة جديدة: تحدث جميع روابط القائمة لتمرير الثيم للصفحة التالية
+function updateNavLinks(theme) {
+  var navLinks = document.querySelectorAll('header nav a');
+  for (var i = 0; i < navLinks.length; i++) {
+    // نأخذ الرابط الأساسي (مثلاً index.html) بدون أي إضافات سابقة
+    var baseHref = navLinks[i].getAttribute('href').split('?')[0];
+    
+    if (theme === 'dark') {
+      navLinks[i].setAttribute('href', baseHref + '?theme=dark');
+    } else {
+      navLinks[i].setAttribute('href', baseHref);
+    }
+  }
+}
+
 function setActiveNavigation() {
   var currentPage = window.location.pathname.split('/').pop();
 
@@ -28,7 +55,10 @@ function setActiveNavigation() {
   var navLinks = document.querySelectorAll('header nav a');
 
   for (var i = 0; i < navLinks.length; i++) {
-    if (navLinks[i].getAttribute('href') === currentPage) {
+    // يجب فصل الرابط عن الإضافات (؟theme=dark) لكي تعمل المقارنة بشكل صحيح
+    var linkHref = navLinks[i].getAttribute('href').split('?')[0];
+    
+    if (linkHref === currentPage) {
       navLinks[i].classList.add('active');
     }
   }
@@ -220,14 +250,31 @@ function initSettingsPage() {
   var form = document.getElementById('settingsForm');
   var themeSelect = document.getElementById('theme');
 
+  // قراءة الثيم من الرابط لتحديث القائمة المنسدلة
+  var urlParams = new URLSearchParams(window.location.search);
+  if (urlParams.get('theme') === 'dark') {
+    themeSelect.value = 'dark';
+  }
+
   form.addEventListener('submit', function (event) {
     event.preventDefault();
+    var selectedTheme = themeSelect.value;
 
-    if (themeSelect.value === 'dark') {
+    if (selectedTheme === 'dark') {
       document.body.setAttribute('data-theme', 'dark');
     } else {
       document.body.removeAttribute('data-theme');
     }
+
+    // تحديث الرابط الحالي في المتصفح ليحتوي على الثيم الجديد بدون إعادة تحميل الصفحة
+    var newUrl = window.location.pathname;
+    if (selectedTheme === 'dark') {
+      newUrl += '?theme=dark';
+    }
+    window.history.replaceState(null, '', newUrl);
+
+    // تحديث جميع الروابط في القائمة العلوية
+    updateNavLinks(selectedTheme);
 
     alert('Theme changed successfully!');
   });
