@@ -1,17 +1,25 @@
 document.addEventListener('DOMContentLoaded', function () {
-  // 1. قراءة الثيم من الرابط (URL Parameters)
+  // --- التعديل الأول: قراءة الثيم من الرابط وتطبيقه ---
   var urlParams = new URLSearchParams(window.location.search);
   var currentTheme = urlParams.get('theme');
-
-  // 2. تطبيق الثيم وتحديث الروابط بناءً على الرابط الحالي
   if (currentTheme === 'dark') {
     document.body.setAttribute('data-theme', 'dark');
-    updateNavLinks('dark');
-  } else {
-    updateNavLinks('light');
   }
+  // ---------------------------------------------------
 
   setActiveNavigation();
+
+  // --- التعديل الثاني: إضافة الثيم لروابط التنقل عشان ينتقل معك لكل صفحة ---
+  var navLinks = document.querySelectorAll('header nav a');
+  for (var j = 0; j < navLinks.length; j++) {
+    var baseHref = navLinks[j].getAttribute('href').split('?')[0];
+    if (currentTheme === 'dark') {
+      navLinks[j].setAttribute('href', baseHref + '?theme=dark');
+    } else {
+      navLinks[j].setAttribute('href', baseHref);
+    }
+  }
+  // ----------------------------------------------------------------------
 
   if (document.getElementById('caloriesPage')) {
     initCaloriesPage();
@@ -30,21 +38,6 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 });
 
-// دالة جديدة: تحدث جميع روابط القائمة لتمرير الثيم للصفحة التالية
-function updateNavLinks(theme) {
-  var navLinks = document.querySelectorAll('header nav a');
-  for (var i = 0; i < navLinks.length; i++) {
-    // نأخذ الرابط الأساسي (مثلاً index.html) بدون أي إضافات سابقة
-    var baseHref = navLinks[i].getAttribute('href').split('?')[0];
-    
-    if (theme === 'dark') {
-      navLinks[i].setAttribute('href', baseHref + '?theme=dark');
-    } else {
-      navLinks[i].setAttribute('href', baseHref);
-    }
-  }
-}
-
 function setActiveNavigation() {
   var currentPage = window.location.pathname.split('/').pop();
 
@@ -55,9 +48,8 @@ function setActiveNavigation() {
   var navLinks = document.querySelectorAll('header nav a');
 
   for (var i = 0; i < navLinks.length; i++) {
-    // يجب فصل الرابط عن الإضافات (؟theme=dark) لكي تعمل المقارنة بشكل صحيح
+    // --- التعديل الثالث: تجاهل إضافة الثيم عند تحديد الصفحة الفعالة (Active) ---
     var linkHref = navLinks[i].getAttribute('href').split('?')[0];
-    
     if (linkHref === currentPage) {
       navLinks[i].classList.add('active');
     }
@@ -250,7 +242,7 @@ function initSettingsPage() {
   var form = document.getElementById('settingsForm');
   var themeSelect = document.getElementById('theme');
 
-  // قراءة الثيم من الرابط لتحديث القائمة المنسدلة
+  // --- التعديل الرابع: تحديث القائمة المنسدلة بناءً على الرابط ---
   var urlParams = new URLSearchParams(window.location.search);
   if (urlParams.get('theme') === 'dark') {
     themeSelect.value = 'dark';
@@ -258,25 +250,13 @@ function initSettingsPage() {
 
   form.addEventListener('submit', function (event) {
     event.preventDefault();
-    var selectedTheme = themeSelect.value;
 
-    if (selectedTheme === 'dark') {
-      document.body.setAttribute('data-theme', 'dark');
+    // --- التعديل الخامس: تغيير الرابط مباشرة لتطبيق الثيم ---
+    if (themeSelect.value === 'dark') {
+      window.location.search = '?theme=dark'; 
     } else {
-      document.body.removeAttribute('data-theme');
+      window.location.search = ''; 
     }
-
-    // تحديث الرابط الحالي في المتصفح ليحتوي على الثيم الجديد بدون إعادة تحميل الصفحة
-    var newUrl = window.location.pathname;
-    if (selectedTheme === 'dark') {
-      newUrl += '?theme=dark';
-    }
-    window.history.replaceState(null, '', newUrl);
-
-    // تحديث جميع الروابط في القائمة العلوية
-    updateNavLinks(selectedTheme);
-
-    alert('Theme changed successfully!');
   });
 }
 
